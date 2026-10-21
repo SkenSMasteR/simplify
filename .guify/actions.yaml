@@ -1,0 +1,1 @@
+build: npx rollup src/main.js --file theme.js --format iife

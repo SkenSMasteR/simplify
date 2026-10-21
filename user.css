@@ -1,0 +1,217 @@
+#simplify-np-loader {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.loader {
+  --color-1: rgba(0, 0, 0, 0.3);
+  --color-2: #37ff00;
+  --size: 1px;
+
+  position: relative;
+  width: calc(100 * var(--size));
+  height: calc(100 * var(--size));
+}
+
+.loader:before,
+.loader:after {
+  content: "";
+  border-radius: 50%;
+  position: absolute;
+  inset: 0;
+  box-shadow: 0 0 calc(10 * var(--size)) calc(2 * var(--size)) var(--color-1) inset;
+}
+
+.loader:after {
+  box-shadow: 0 calc(2 * var(--size)) 0 var(--color-2) inset;
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.simplify-arrow {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
+  transition: transform 0.35s ease, opacity 0.3s ease;
+}
+
+.simplify-arrow-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.simplify-arrow.left {
+  left: -78px;
+  transform: translate(120px, -50%);
+}
+
+.simplify-arrow.right {
+  right: -78px;
+  transform: translate(-120px, -50%);
+}
+
+.simplify-visual.hints-off .simplify-arrow,
+.simplify-visual.nav-off .simplify-arrow {
+  display: none;
+}
+
+.simplify-visual:hover .simplify-arrow {
+  opacity: 1;
+  transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+}
+
+.simplify-visual:hover .simplify-arrow.left,
+.simplify-visual:hover .simplify-arrow.right {
+  transform: translate(0, -50%);
+}
+
+#simplify-settings-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10001;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+#simplify-settings-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+#simplify-settings-btn:active {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+#simplify-settings-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+#simplify-settings-panel {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  z-index: 10002;
+  width: 260px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(24, 24, 24, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  pointer-events: auto;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(0.98);
+  transform-origin: top right;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+}
+
+#simplify-settings-panel.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.simplify-settings-head {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.simplify-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.simplify-row-label {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.simplify-switch {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.simplify-switch[aria-checked="true"] {
+  background: #1db954;
+}
+
+.simplify-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s ease;
+}
+
+.simplify-switch[aria-checked="true"] .simplify-switch-thumb {
+  transform: translateX(18px);
+}
+
+.simplify-clear-btn {
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 9px;
+  background: #fff;
+  color: #111;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.simplify-clear-btn:hover {
+  opacity: 0.85;
+}
