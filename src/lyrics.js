@@ -8,6 +8,8 @@ const NO_LYRICS = "¯\\_(ツ)_/¯";
 let box = null;
 let scroller = null;
 let emptyEl = null;
+let topSpacer = null;
+let bottomSpacer = null;
 let lines = [];
 let lastUri = "";
 let activeIdx = -1;
@@ -24,6 +26,13 @@ function ensureBox() {
 
     scroller = document.createElement("div");
     scroller.id = "simplify-lyrics-scroll";
+
+    topSpacer = document.createElement("div");
+    topSpacer.className = "simplify-lyric-spacer";
+    bottomSpacer = document.createElement("div");
+    bottomSpacer.className = "simplify-lyric-spacer";
+    scroller.appendChild(topSpacer);
+    scroller.appendChild(bottomSpacer);
     box.appendChild(scroller);
 
     emptyEl = document.createElement("div");
@@ -53,42 +62,46 @@ function parseLrc(text) {
   return out;
 }
 
-function renderLrc(lrc) {
+function clearLines() {
+  lines.forEach((l) => l.el.remove());
+  lines = [];
+  activeIdx = -1;
+}
+
+function pruneHistory(keepUri) {
+  lines = lines.filter((l) => {
+    if (l.uri === keepUri) return true;
+    l.el.remove();
+    return false;
+  });
+}
+
+function renderLrc(lrc, uri) {
   if (!ensureBox()) return;
   const parsed = parseLrc(lrc);
   if (!parsed.length) {
     renderEmpty();
     return;
   }
-  scroller.innerHTML = "";
   emptyEl.style.display = "none";
   scroller.style.display = "block";
 
-  const top = document.createElement("div");
-  top.className = "simplify-lyric-spacer";
-  scroller.appendChild(top);
-
-  lines = parsed.map((l) => {
+  parsed.forEach((l, i) => {
     const el = document.createElement("div");
     el.className = "simplify-lyric-line";
+    if (i === 0 && lines.length) el.classList.add("song-start");
     el.textContent = l.text;
-    scroller.appendChild(el);
-    return { t: l.t, el };
+    scroller.insertBefore(el, bottomSpacer);
+    lines.push({ t: l.t, el, uri });
   });
-
-  const bottom = document.createElement("div");
-  bottom.className = "simplify-lyric-spacer";
-  scroller.appendChild(bottom);
 
   activeIdx = -1;
 }
 
 function renderEmpty() {
   if (!ensureBox()) return;
-  scroller.innerHTML = "";
+  clearLines();
   scroller.style.display = "none";
-  lines = [];
-  activeIdx = -1;
   emptyEl.style.display = "block";
 }
 
@@ -162,7 +175,7 @@ async function loadLyrics(meta) {
   }
 
   if (token !== fetchToken) return;
-  if (synced) renderLrc(synced);
+  if (synced) renderLrc(synced, meta.uri);
   else renderEmpty();
 }
 
@@ -192,6 +205,7 @@ function updateActive() {
   const pos = Spicetify.Player.getProgress() / 1000;
   let idx = -1;
   for (let i = 0; i < lines.length; i++) {
+    if (lines[i].uri !== lastUri) continue;
     if (lines[i].t <= pos + 0.2) idx = i;
     else break;
   }
@@ -213,15 +227,11 @@ function loop() {
 
   const meta = readMeta();
   if (meta && meta.uri && meta.uri !== lastUri) {
+    const prevUri = lastUri;
     lastUri = meta.uri;
     activeIdx = -1;
-    lines = [];
+    pruneHistory(prevUri);
     if (meta.title && meta.artist) {
-      if (ensureBox()) {
-        scroller.innerHTML = "";
-        scroller.style.display = "block";
-        emptyEl.style.display = "none";
-      }
       loadLyrics(meta);
     } else {
       renderEmpty();
