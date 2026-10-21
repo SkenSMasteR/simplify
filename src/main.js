@@ -1,6 +1,7 @@
 import { HIDDEN_CLASSES } from "./hidden.js";
 import { getOverlay } from "./overlay.js";
 import "./nowplaying.js";
+import "./lyrics.js";
 import "./settings.js";
 
 const STYLE_ID = "simplify-hidden";

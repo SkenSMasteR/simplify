@@ -312,9 +312,15 @@ function hidePullString() {
   pullString.style.transform = PULL_REST;
 }
 
+function setHiddenClass(on) {
+  const ov = getOverlay();
+  if (ov) ov.classList.toggle("np-hidden", on);
+}
+
 function dismiss() {
   pulled = true;
   hidePullString();
+  setHiddenClass(true);
   if (root) {
     root.style.transition = "transform 0.5s cubic-bezier(0.5,0,0.75,0)";
     root.style.transform = HIDDEN_TRANSFORM;
@@ -326,6 +332,7 @@ function dismiss() {
 function restore() {
   pulled = false;
   clearTimeout(revealTimer);
+  setHiddenClass(false);
   if (root) {
     root.style.transition = "transform 0.6s cubic-bezier(0.22,1.9,0.36,1)";
     root.style.transform = "translateX(-50%)";
@@ -460,6 +467,10 @@ function readCoverFromDom() {
   return el ? el.src : null;
 }
 
+function getAvgColor() {
+  return lastAvg;
+}
+
 function setLoading(on) {
   if (!loaderWrap || !img) return;
   loaderWrap.style.display = on ? "flex" : "none";
@@ -542,4 +553,4 @@ function start() {
 
 start();
 
-export { syncCover as updateNowPlaying, start as startNowPlaying, applyArrows as refreshArrows };
+export { syncCover as updateNowPlaying, start as startNowPlaying, applyArrows as refreshArrows, getAvgColor };
