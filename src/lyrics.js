@@ -166,12 +166,19 @@ async function loadLyrics(meta) {
   else renderNoLyrics(meta.uri);
 }
 
-function scrollToActive() {
+function scrollToActive(instant) {
   if (activeIdx >= 0 && lines[activeIdx] && scroller) {
     const el = lines[activeIdx].el;
     const target =
       el.offsetTop - scroller.clientHeight / 2 + el.offsetHeight / 2;
-    scroller.scrollTop = Math.max(0, target);
+    if (instant) {
+      const prev = scroller.style.scrollBehavior;
+      scroller.style.scrollBehavior = "auto";
+      scroller.scrollTop = Math.max(0, target);
+      scroller.style.scrollBehavior = prev;
+    } else {
+      scroller.scrollTop = Math.max(0, target);
+    }
   }
 }
 
@@ -220,7 +227,12 @@ function loop() {
   const hidden = ov ? ov.classList.contains("np-hidden") : false;
   if (hidden !== lastHidden) {
     lastHidden = hidden;
-    setTimeout(scrollToActive, 480);
+    const t0 = performance.now();
+    const track = (now) => {
+      scrollToActive(true);
+      if (now - t0 < 520) requestAnimationFrame(track);
+    };
+    requestAnimationFrame(track);
   }
 
   const meta = readMeta();
