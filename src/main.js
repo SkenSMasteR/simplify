@@ -3,6 +3,7 @@ import { getOverlay } from "./overlay.js";
 import { isEnabled, onToggle } from "./state.js";
 import "./nowplaying.js";
 import "./lyrics.js";
+import "./autobanner.js";
 import "./settings.js";
 
 const STYLE_ID = "simplify-hidden";

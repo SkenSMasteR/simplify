@@ -1,6 +1,6 @@
 import { getOverlay } from "./overlay.js";
 import { refreshArrows } from "./nowplaying.js";
-import { clearSaves, arrowsVisible, setArrowMode } from "./prefs.js";
+import { clearSaves, arrowsVisible, setArrowMode, getAutoBanner, setAutoBanner } from "./prefs.js";
 import { isEnabled, setEnabled } from "./state.js";
 
 const BTN_ID = "simplify-settings-btn";
@@ -58,6 +58,32 @@ function build() {
     row.appendChild(label);
     row.appendChild(sw);
 
+    const bannerRow = document.createElement("div");
+    bannerRow.className = "simplify-row";
+    const bannerLabel = document.createElement("span");
+    bannerLabel.className = "simplify-row-label";
+    bannerLabel.textContent = "AutoBanner";
+    const bannerSw = document.createElement("button");
+    bannerSw.className = "simplify-switch";
+    bannerSw.setAttribute("role", "switch");
+    bannerSw.setAttribute("aria-checked", String(getAutoBanner()));
+    bannerSw.innerHTML = '<span class="simplify-switch-thumb"></span>';
+    bannerSw.addEventListener("click", () => {
+      const on = bannerSw.getAttribute("aria-checked") !== "true";
+      bannerSw.setAttribute("aria-checked", String(on));
+      setAutoBanner(on);
+      if (
+        !on &&
+        typeof Spicetify !== "undefined" &&
+        Spicetify.Platform &&
+        Spicetify.Platform.History
+      ) {
+        Spicetify.Platform.History.push("/");
+      }
+    });
+    bannerRow.appendChild(bannerLabel);
+    bannerRow.appendChild(bannerSw);
+
     const clearBtn = document.createElement("button");
     clearBtn.className = "simplify-clear-btn";
     clearBtn.textContent = "Clear saved data";
@@ -65,6 +91,7 @@ function build() {
       clearSaves();
       clearBtn.textContent = "Cleared";
       sw.setAttribute("aria-checked", String(arrowsVisible()));
+      bannerSw.setAttribute("aria-checked", String(getAutoBanner()));
       refreshArrows();
       setTimeout(() => {
         clearBtn.textContent = "Clear saved data";
@@ -75,6 +102,7 @@ function build() {
     panel.appendChild(head);
     panel.appendChild(toggleBtn);
     panel.appendChild(row);
+    panel.appendChild(bannerRow);
     panel.appendChild(clearBtn);
     overlay.appendChild(panel);
   }

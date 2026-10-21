@@ -1,7 +1,16 @@
 const HINT_KEY = "simplify.navHintCount";
 const MODE_KEY = "simplify.arrows";
+const BANNER_KEY = "simplify.autoBanner";
 const HINT_MAX = 3;
 const SAVE_PREFIX = "simplify.";
+
+function getAutoBanner() {
+  return localStorage.getItem(BANNER_KEY) === "1";
+}
+
+function setAutoBanner(on) {
+  localStorage.setItem(BANNER_KEY, on ? "1" : "0");
+}
 
 function getHintCount() {
   const v = parseInt(localStorage.getItem(HINT_KEY) || "0", 10);
@@ -43,4 +52,6 @@ export {
   bumpHint,
   arrowsVisible,
   clearSaves,
+  getAutoBanner,
+  setAutoBanner,
 };
