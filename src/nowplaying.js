@@ -1,5 +1,6 @@
 import { getOverlay } from "./overlay.js";
 import { bumpHint, arrowsVisible } from "./prefs.js";
+import { isEnabled, onToggle } from "./state.js";
 
 const COVER_SELECTOR = '[data-testid="cover-art-button"] img';
 const FALLBACK_COVER =
@@ -148,6 +149,12 @@ function attachGestures(el) {
 }
 
 function build() {
+  if (!isEnabled()) {
+    const ex = document.getElementById("simplify-np");
+    if (ex) ex.remove();
+    root = null;
+    return null;
+  }
   const overlay = getOverlay();
   if (!overlay) return null;
   if (overlay.querySelector("#simplify-np")) {
@@ -552,5 +559,17 @@ function start() {
 }
 
 start();
+
+onToggle((on) => {
+  if (on) {
+    lastSrc = "";
+    lastAvg = null;
+    syncCover();
+  } else {
+    const ex = document.getElementById("simplify-np");
+    if (ex) ex.remove();
+    root = null;
+  }
+});
 
 export { syncCover as updateNowPlaying, start as startNowPlaying, applyArrows as refreshArrows, getAvgColor };

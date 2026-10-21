@@ -160,6 +160,10 @@
   margin-bottom: 14px;
 }
 
+#simplify-toggle-btn {
+  margin-bottom: 14px;
+}
+
 .simplify-row {
   display: flex;
   align-items: center;

@@ -4,7 +4,6 @@ export const HIDDEN_CLASSES = [
   "HI1XTDyQDUuYadSC1QdR",
   "iHJ6_yPvPOWhaNcXElNZ",
   "main-globalNav-historyButtonsWrapper",
-
   "_qEwikUlZSIdhG1eHl6y",
   "abo3lmX4A73ipyjul1Zd",
   "main-topBar-topbarContentContainer",

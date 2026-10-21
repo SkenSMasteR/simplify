@@ -1,6 +1,7 @@
 import { getOverlay } from "./overlay.js";
 import { refreshArrows } from "./nowplaying.js";
 import { clearSaves, arrowsVisible, setArrowMode } from "./prefs.js";
+import { isEnabled, setEnabled } from "./state.js";
 
 const BTN_ID = "simplify-settings-btn";
 const PANEL_ID = "simplify-settings-panel";
@@ -25,6 +26,18 @@ function build() {
     const head = document.createElement("div");
     head.className = "simplify-settings-head";
     head.textContent = "Simplify Settings";
+
+    const toggleBtn = document.createElement("button");
+    toggleBtn.id = "simplify-toggle-btn";
+    toggleBtn.className = "simplify-clear-btn";
+    const syncToggleLabel = () => {
+      toggleBtn.textContent = isEnabled() ? "Disable theme" : "Enable theme";
+    };
+    syncToggleLabel();
+    toggleBtn.addEventListener("click", () => {
+      setEnabled(!isEnabled());
+      syncToggleLabel();
+    });
 
     const row = document.createElement("div");
     row.className = "simplify-row";
@@ -60,6 +73,7 @@ function build() {
     });
 
     panel.appendChild(head);
+    panel.appendChild(toggleBtn);
     panel.appendChild(row);
     panel.appendChild(clearBtn);
     overlay.appendChild(panel);

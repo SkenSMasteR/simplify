@@ -1,5 +1,6 @@
 import { getOverlay } from "./overlay.js";
 import { getAvgColor } from "./nowplaying.js";
+import { isEnabled, onToggle } from "./state.js";
 
 const API = "https://lrclib.net/api/get";
 const SEARCH = "https://lrclib.net/api/search";
@@ -17,6 +18,7 @@ let fetchToken = 0;
 let lastHidden = false;
 
 function ensureBox() {
+  if (!isEnabled()) return null;
   const overlay = getOverlay();
   if (!overlay) return null;
 
@@ -215,7 +217,19 @@ function updateActive() {
   }
 }
 
+function teardown() {
+  if (box) box.remove();
+  box = null;
+  scroller = null;
+  emptyEl = null;
+  topSpacer = null;
+  bottomSpacer = null;
+  lines = [];
+  activeIdx = -1;
+}
+
 function loop() {
+  if (!isEnabled()) return;
   if (typeof Spicetify === "undefined" || !Spicetify.Player) return;
 
   const ov = getOverlay();
@@ -244,5 +258,14 @@ function start() {
   ensureBox();
   setInterval(loop, 250);
 }
+
+onToggle((on) => {
+  if (on) {
+    lastUri = "";
+    ensureBox();
+  } else {
+    teardown();
+  }
+});
 
 start();

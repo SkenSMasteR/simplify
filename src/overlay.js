@@ -1,8 +1,15 @@
+import { isEnabled, onToggle } from "./state.js";
+
 const CONTAINER_SELECTOR = ".main-view-container__scroll-node";
 const OVERLAY_ID = "simplify-overlay";
 
 let overlay = null;
 let observer = null;
+
+function applyInteractive() {
+  const el = document.getElementById(OVERLAY_ID);
+  if (el) el.style.pointerEvents = isEnabled() ? "auto" : "none";
+}
 
 function ensureOverlay() {
   const container = document.querySelector(CONTAINER_SELECTOR);
@@ -21,6 +28,7 @@ function ensureOverlay() {
     container.appendChild(el);
   }
   overlay = el;
+  applyInteractive();
   return el;
 }
 
@@ -36,6 +44,7 @@ function getOverlay() {
   return overlay || ensureOverlay();
 }
 
+onToggle(applyInteractive);
 ensureOverlay();
 watch();
 
