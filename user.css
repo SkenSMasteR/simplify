@@ -287,9 +287,3 @@
 .simplify-lyric-line.song-start {
   margin-top: 56px;
 }
-
-#simplify-lyrics-empty {
-  margin-top: 16%;
-  font-size: 28px;
-  color: rgba(255, 255, 255, 0.6);
-}

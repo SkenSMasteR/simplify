@@ -8,7 +8,6 @@ const NO_LYRICS = "¯\\_(ツ)_/¯";
 
 let box = null;
 let scroller = null;
-let emptyEl = null;
 let topSpacer = null;
 let bottomSpacer = null;
 let lines = [];
@@ -37,12 +36,6 @@ function ensureBox() {
     scroller.appendChild(bottomSpacer);
     box.appendChild(scroller);
 
-    emptyEl = document.createElement("div");
-    emptyEl.id = "simplify-lyrics-empty";
-    emptyEl.textContent = NO_LYRICS;
-    emptyEl.style.display = "none";
-    box.appendChild(emptyEl);
-
     overlay.appendChild(box);
   }
   return scroller;
@@ -64,12 +57,6 @@ function parseLrc(text) {
   return out;
 }
 
-function clearLines() {
-  lines.forEach((l) => l.el.remove());
-  lines = [];
-  activeIdx = -1;
-}
-
 function pruneHistory(keepUri) {
   lines = lines.filter((l) => {
     if (l.uri === keepUri) return true;
@@ -78,16 +65,9 @@ function pruneHistory(keepUri) {
   });
 }
 
-function renderLrc(lrc, uri) {
+function appendLines(parsed, uri) {
   if (!ensureBox()) return;
-  const parsed = parseLrc(lrc);
-  if (!parsed.length) {
-    renderEmpty();
-    return;
-  }
-  emptyEl.style.display = "none";
   scroller.style.display = "block";
-
   parsed.forEach((l, i) => {
     const el = document.createElement("div");
     el.className = "simplify-lyric-line";
@@ -96,15 +76,20 @@ function renderLrc(lrc, uri) {
     scroller.insertBefore(el, bottomSpacer);
     lines.push({ t: l.t, el, uri });
   });
-
   activeIdx = -1;
 }
 
-function renderEmpty() {
-  if (!ensureBox()) return;
-  clearLines();
-  scroller.style.display = "none";
-  emptyEl.style.display = "block";
+function renderLrc(lrc, uri) {
+  const parsed = parseLrc(lrc);
+  if (!parsed.length) {
+    renderNoLyrics(uri);
+    return;
+  }
+  appendLines(parsed, uri);
+}
+
+function renderNoLyrics(uri) {
+  appendLines([{ t: 0, text: NO_LYRICS }], uri);
 }
 
 function readMeta() {
@@ -178,7 +163,7 @@ async function loadLyrics(meta) {
 
   if (token !== fetchToken) return;
   if (synced) renderLrc(synced, meta.uri);
-  else renderEmpty();
+  else renderNoLyrics(meta.uri);
 }
 
 function scrollToActive() {
@@ -221,7 +206,6 @@ function teardown() {
   if (box) box.remove();
   box = null;
   scroller = null;
-  emptyEl = null;
   topSpacer = null;
   bottomSpacer = null;
   lines = [];
@@ -248,7 +232,7 @@ function loop() {
     if (meta.title && meta.artist) {
       loadLyrics(meta);
     } else {
-      renderEmpty();
+      renderNoLyrics(meta.uri);
     }
   }
   updateActive();
