@@ -9,4 +9,5 @@ export const HIDDEN_CLASSES = [
   "HuKs8FZg6Y75cV9Lh0Kk",
   "_qEwikUlZSIdhG1eHl6y",
   "abo3lmX4A73ipyjul1Zd",
+  "main-topBar-topbarContentContainer",
 ];
