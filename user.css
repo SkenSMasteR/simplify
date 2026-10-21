@@ -89,6 +89,10 @@
   transform: translate(0, -50%);
 }
 
+.simplify-visual:has(#simplify-pull:hover) .simplify-arrow {
+  opacity: 0;
+}
+
 #simplify-settings-btn {
   position: absolute;
   top: 16px;

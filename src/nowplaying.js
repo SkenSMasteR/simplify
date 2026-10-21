@@ -14,10 +14,21 @@ let img = null;
 let loaderWrap = null;
 let svgWrap = null;
 let visualEl = null;
+let pullString = null;
+let pulled = false;
 let lastSrc = "";
 let lastAvg = null;
 let djMode = false;
 let pendingTimer = null;
+let revealTimer = null;
+
+const DRAG_THRESHOLD = 60;
+const PULL_THRESHOLD = 140;
+const HIDDEN_TRANSFORM = "translateX(-50%) translateY(-100%)";
+const PULL_REST = "translateX(-50%) translateY(-120%)";
+const PULL_SHOWN = "translateX(-50%) translateY(0)";
+
+const PULL_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 200 100 800" width="22" height="160" preserveAspectRatio="xMidYMid meet"><path d="M 50 0 C 35 120, 65 200, 48 320 S 35 500, 52 620 S 65 800, 50 940" stroke="currentColor" stroke-width="3" fill="none"/><circle cx="50" cy="960" r="20" stroke="currentColor" stroke-width="3" fill="none"/></svg>`;
 
 function applyArrows() {
   if (!visualEl) return;
@@ -58,8 +69,6 @@ function makeArrow(side, label, path) {
   return el;
 }
 
-const DRAG_THRESHOLD = 60;
-
 function playerToggle() {
   const p = typeof Spicetify !== "undefined" && Spicetify.Player;
   if (!p) return;
@@ -87,6 +96,7 @@ function attachGestures(el) {
   el.style.transition = "transform 0.25s ease";
 
   let downX = 0;
+  let downY = 0;
   let dragging = false;
   let moved = false;
 
@@ -94,6 +104,7 @@ function attachGestures(el) {
     dragging = true;
     moved = false;
     downX = e.clientX;
+    downY = e.clientY;
     el.setPointerCapture(e.pointerId);
     if (!djMode) el.style.cursor = "grabbing";
     el.style.transition = "none";
@@ -102,8 +113,13 @@ function attachGestures(el) {
   el.addEventListener("pointermove", (e) => {
     if (!dragging || djMode) return;
     const dx = e.clientX - downX;
-    if (Math.abs(dx) > 6) moved = true;
-    el.style.transform = `translateX(${dx}px) rotate(${dx * 0.03}deg)`;
+    const dy = e.clientY - downY;
+    if (Math.abs(dx) > 6 || dy > 6) moved = true;
+    if (dy > Math.abs(dx)) {
+      el.style.transform = `translateY(${Math.max(0, dy)}px)`;
+    } else {
+      el.style.transform = `translateX(${dx}px) rotate(${dx * 0.03}deg)`;
+    }
   });
 
   const end = (e) => {
@@ -113,8 +129,11 @@ function attachGestures(el) {
     el.style.transition = "transform 0.25s ease";
     el.style.transform = "";
     const dx = e.clientX - downX;
+    const dy = e.clientY - downY;
     if (!moved) {
       playerToggle();
+    } else if (!djMode && dy > Math.abs(dx)) {
+      if (dy >= PULL_THRESHOLD) dismiss();
     } else if (!djMode && Math.abs(dx) >= DRAG_THRESHOLD) {
       if (dx > 0) playerNext();
       else playerBack();
@@ -143,7 +162,7 @@ function build() {
     "left:50%",
     "transform:translateX(-50%)",
     "height:54%",
-    "padding:28px",
+    "padding:64px 28px 28px",
     "box-sizing:border-box",
     "display:flex",
     "align-items:center",
@@ -205,6 +224,10 @@ function build() {
     "border-radius:12px",
     "display:block",
     "box-shadow:0 20px 60px rgba(0,0,0,0.55)",
+    "opacity:0",
+    "transform:scale(0.4)",
+    "transform-origin:center",
+    "transition:opacity 0.4s ease, transform 0.5s cubic-bezier(0.34,1.3,0.64,1)",
   ].join(";");
 
   loaderWrap = document.createElement("div");
@@ -244,12 +267,114 @@ function build() {
   visual.appendChild(img);
   visual.appendChild(svgWrap);
   visual.appendChild(loaderWrap);
+
+  pullString = document.createElement("div");
+  pullString.id = "simplify-pull";
+  pullString.style.cssText = [
+    "position:absolute",
+    "top:88%",
+    "left:50%",
+    `transform:${PULL_REST}`,
+    "z-index:4",
+    "color:rgba(255,255,255,0.85)",
+    "cursor:grab",
+    "touch-action:none",
+    "user-select:none",
+    "pointer-events:none",
+    "opacity:0",
+    "filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5))",
+    "transition:transform 0.4s cubic-bezier(0.34,1.3,0.64,1)",
+  ].join(";");
+  pullString.innerHTML = PULL_SVG;
+  visual.appendChild(pullString);
+  attachPullString(pullString);
+
   artWrap.appendChild(visual);
   root.appendChild(artWrap);
   overlay.appendChild(root);
+
   attachGestures(visual);
   applyArrows();
   return root;
+}
+
+function showPullString() {
+  if (!pullString) return;
+  pullString.style.pointerEvents = "auto";
+  pullString.style.opacity = "1";
+  pullString.style.transform = PULL_SHOWN;
+}
+
+function hidePullString() {
+  if (!pullString) return;
+  pullString.style.pointerEvents = "none";
+  pullString.style.opacity = "0";
+  pullString.style.transform = PULL_REST;
+}
+
+function dismiss() {
+  pulled = true;
+  hidePullString();
+  if (root) {
+    root.style.transition = "transform 0.5s cubic-bezier(0.5,0,0.75,0)";
+    root.style.transform = HIDDEN_TRANSFORM;
+  }
+  clearTimeout(revealTimer);
+  revealTimer = setTimeout(showPullString, 520);
+}
+
+function restore() {
+  pulled = false;
+  clearTimeout(revealTimer);
+  if (root) {
+    root.style.transition = "transform 0.6s cubic-bezier(0.22,1.9,0.36,1)";
+    root.style.transform = "translateX(-50%)";
+  }
+  hidePullString();
+}
+
+function attachPullString(el) {
+  let downY = 0;
+  let dragging = false;
+
+  el.addEventListener("pointerdown", (e) => {
+    if (!pulled) return;
+    dragging = true;
+    downY = e.clientY;
+    el.setPointerCapture(e.pointerId);
+    el.style.cursor = "grabbing";
+    if (root) root.style.transition = "none";
+    e.stopPropagation();
+  });
+
+  el.addEventListener("pointermove", (e) => {
+    if (!dragging || !root) return;
+    const dy = Math.max(0, e.clientY - downY);
+    const h = root.offsetHeight || 1;
+    let offset = -h + dy;
+    if (offset > 0) offset *= 0.4;
+    root.style.transform = `translateX(-50%) translateY(${offset}px)`;
+  });
+
+  const end = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    el.style.cursor = "grab";
+    const dy = e.clientY - downY;
+    if (dy >= PULL_THRESHOLD) restore();
+    else dismissSnap();
+  };
+
+  el.addEventListener("pointerup", end);
+  el.addEventListener("pointercancel", end);
+}
+
+function dismissSnap() {
+  if (root) {
+    root.style.transition = "transform 0.35s cubic-bezier(0.34,1.3,0.64,1)";
+    root.style.transform = HIDDEN_TRANSFORM;
+  }
+  showPullString();
 }
 
 function extractColors(src) {
@@ -339,6 +464,8 @@ function setLoading(on) {
   if (!loaderWrap || !img) return;
   loaderWrap.style.display = on ? "flex" : "none";
   img.style.visibility = on || djMode ? "hidden" : "visible";
+  img.style.opacity = on || djMode ? "0" : "1";
+  img.style.transform = on ? "scale(0.4)" : "scale(1)";
   if (glow) {
     glow.style.opacity = on || djMode ? "0" : "0.85";
     glow.style.transform = on ? "scale(0.4)" : "scale(1)";
